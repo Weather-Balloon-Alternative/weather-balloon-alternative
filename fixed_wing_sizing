@@ -1,0 +1,74 @@
+import numpy as np 
+import math
+import pandas
+import ambiance
+import matplotlib.pyplot as plt
+
+req_energy = []
+
+#constant ROC strategy
+ROC = 10    #[m/s]
+
+#https://www.omicsonline.org/articles-images/2168-9792-5-161-g009.html
+#2412 foil
+cl_alpha = 0.11
+cl_0 =0.25 
+C_d_0 = 0.07
+c_d_2 = 0.000675
+W=150 #[N]
+C_L_climb = 1.1
+prop_efficiency = 0.7
+electric_sys_eff = 0.7
+AR= 8
+e =0.9
+
+#inputs
+startaltitude = 0
+top_altitude = 33_000
+finish_altitude = 0
+V_0 = 15
+approach = "const_ROC" #const_ROC, const_P
+plots = False
+
+rho_array = ambiance.Atmosphere(np.arange(startaltitude,top_altitude)).density
+E_tot_array = []
+S_array = []
+
+slow_start_height = 1000
+weights = [250]
+if approach == "const_ROC":
+    for W in weights:
+        for i in np.linspace(92,93,100):
+            S = i/10
+            C_L = 2*W/(rho_array*S*V_0**2)
+            for j in range(len(C_L)):
+                if C_L[j]>C_L_climb:
+                    C_L[j]=C_L_climb
+            V = np.sqrt(2*W/(rho_array*S*C_L))
+            C_D = C_d_0 + C_L**2/(np.pi*AR*e)
+            #Power consumption calculations
+            P_equilibrium=0.5*rho_array*S*V**3*C_D/prop_efficiency
+            P_climb = np.ones(len(C_L))*ROC*W/prop_efficiency
+            P_climb[0:slow_start_height] = (ROC/3)*W/prop_efficiency
+            P_tot = P_equilibrium+P_climb
+            # print(P_tot)
+            T = np.ones(len(C_L))*1/ROC
+            T[0:slow_start_height]=1/(ROC/3)
+            E_tot = P_tot * T
+            # print(np.max(P_tot))
+            # print(np.sum(E_tot))
+            # plt.plot(P_tot)
+            E_tot_array.append(sum(E_tot))
+            S_array.append(S)
+        if plots:
+            plt.plot(S_array,E_tot_array)
+        min_E_tot_loc = int(np.argwhere(E_tot_array==min(E_tot_array)))
+        print("Weight: ", W)
+        print("optimum surface area: ",S_array[min_E_tot_loc])
+        print("minimum energy required : ",E_tot_array[min_E_tot_loc])
+        print("maximum power requried: ", max(P_tot))
+        print("")
+        S_array = []
+        E_tot_array =[]
+if plots:
+    plt.show()
