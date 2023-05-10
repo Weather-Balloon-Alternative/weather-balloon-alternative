@@ -66,36 +66,89 @@ def balloon_mass_update(m_tot):
     return mass
 
 
-E_req = Prop_power*descent_time
-wh_kg = 210
 
-m_bat = E_req/wh_kg
+def plotting():
+    power = np.arange(100, 1100, 100)
+    range_data = np.zeros(np.shape(power))
+    V_avg_data = np.zeros(np.shape(power))
+    m_tot_data = np.zeros(np.shape(power))
+    for i in range(np.size(power)):
 
-#balloon mass iteration
-m_balloon_log = []
-m_balloon_iteration = m_balloon_assumed
-for i in range(10):
-    m_tot_initial = m_pay + m_struct + m_prop + m_bat + m_balloon_iteration
-    m_balloon_iteration = balloon_mass_update(m_tot_initial)
-    m_balloon_log.append(m_balloon_iteration)
+        Prop_power = power[i]
+        E_req = Prop_power * descent_time
+        wh_kg = 210
 
-m_b_final = m_balloon_iteration
-m_tot = m_pay + m_prop + m_struct + m_bat + m_b_final
-m_module = m_pay + m_prop + m_bat + m_struct
+        m_bat = E_req / wh_kg
 
-descent_rate = max_alt/(descent_time*60*60)
-range, V_log = calc_range(descent_rate, m_tot)
-V_avg = sum(V_log)/len(V_log)
-V_max = max(V_log)
-V_min = min(V_log)
-print("Range: ", range)
-print("mtot: ", m_tot)
-print("mbat: ", m_bat)
-print("M_balloon initial: ", m_balloon_assumed)
-print("final balloon mass: ",m_b_final)
-print("m_module: ", m_module)
-print("V_avg: ", V_avg)
-print("V_max: ", V_max)
-print("V_min: ", V_min)
+        # balloon mass iteration
+        m_balloon_log = []
+        m_balloon_iteration = m_balloon_assumed
+        for j in range(10):
+            m_tot_initial = m_pay + m_struct + m_prop + m_bat + m_balloon_iteration
+            m_balloon_iteration = balloon_mass_update(m_tot_initial)
+            m_balloon_log.append(m_balloon_iteration)
+
+        m_b_final = m_balloon_iteration
+        m_tot = m_pay + m_prop + m_struct + m_bat + m_b_final
+
+        descent_rate = max_alt / (descent_time * 60 * 60)
+        R, V_log = calc_range(descent_rate, m_tot)
+        V_avg = sum(V_log)/len(V_log)
+        range_data[i] = R
+        V_avg_data[i] = V_avg
+        m_tot_data[i] = m_tot
 
 
+    #plot 2 in one
+    fig, ax1 = plt.subplots()
+
+    color1 = 'tab:red'
+    ax1.set_xlabel('power')
+    ax1.set_ylabel('range', color=color1)
+    ax1.plot(power, range_data, color=color1)
+    ax1.tick_params(axis='y', labelcolor=color1)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color2 = 'tab:blue'
+    ax2.set_ylabel('Total mass', color=color2)  # we already handled the x-label with ax1
+    ax2.plot(power, m_tot_data, color=color2)
+    ax2.tick_params(axis='y', labelcolor=color2)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()
+
+def calc_parameters():
+    E_req = Prop_power*descent_time
+    wh_kg = 210
+
+    m_bat = E_req/wh_kg
+
+    #balloon mass iteration
+    m_balloon_log = []
+    m_balloon_iteration = m_balloon_assumed
+    for i in range(10):
+        m_tot_initial = m_pay + m_struct + m_prop + m_bat + m_balloon_iteration
+        m_balloon_iteration = balloon_mass_update(m_tot_initial)
+        m_balloon_log.append(m_balloon_iteration)
+
+    m_b_final = m_balloon_iteration
+    m_tot = m_pay + m_prop + m_struct + m_bat + m_b_final
+    m_module = m_pay + m_prop + m_bat + m_struct
+
+    descent_rate = max_alt/(descent_time*60*60)
+    R, V_log = calc_range(descent_rate, m_tot)
+    V_avg = sum(V_log)/len(V_log)
+    V_max = max(V_log)
+    V_min = min(V_log)
+    print("Range: ", R)
+    print("mtot: ", m_tot)
+    print("mbat: ", m_bat)
+    print("M_balloon initial: ", m_balloon_assumed)
+    print("final balloon mass: ",m_b_final)
+    print("m_module: ", m_module)
+    print("V_avg: ", V_avg)
+    print("V_max: ", V_max)
+    print("V_min: ", V_min)
+
+plotting()
