@@ -14,11 +14,12 @@ m_pay = 2 #kg
 
 #input
 ascent_time = 1.6 #hours
-descent_time = 6 #hours
+descent_time = 3 #hours
 Prop_power = 250 #W
 m_prop = 0.5
 m_balloon_assumed = 5 #varies with weight, will go out of hand
 m_struct = 1
+m_gas_extra = 1.1 #kg
 
 
 def gas_density(molar_mass, altitude):
@@ -32,6 +33,21 @@ def calculate_required_size(m_tot, altitude, molar_mass):
     delta_rho = atmos.density - gas_density(molar_mass, altitude)
     volume = m_tot / delta_rho
     return volume
+def climb_rate(m_gas_extra, m_gas_basic, molar_mass): #needs to be updated
+    timestep = 10.
+    alt = np.arange(0, 35000, timestep)
+    vel = np.zeros_like(alt)
+    t = 0
+    for i in range(np.size(alt)):
+        rho_air = Atmosphere(float(alt[1])).density[0]
+        vol = (m_gas_basic + m_gas_extra) / (rho_air - gas_density(molar_mass, alt[i]))
+        rad = ((3*vol)/(4*np.pi))**(1/3)
+        area = np.pi*(rad**2)
+        v = ((2*9.81*m_gas_extra)/(rho_air*0.5*area))**0.5
+        vel[i] = v
+        t = t + timestep/v
+
+    return alt, vel, t
 
 """
 def calc_drag_force(m_tot, altitude, velocity):
@@ -161,8 +177,8 @@ def plottingdescenttime():
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
     color2 = 'tab:blue'
-    ax2.set_ylabel('Average velocity [m/s]', color=color2)  # we already handled the x-label with ax1
-    ax2.plot(descent_time_data, V_avg_data, color=color2)
+    ax2.set_ylabel('Total mass [kg]', color=color2)  # we already handled the x-label with ax1
+    ax2.plot(descent_time_data, m_tot_data, color=color2)
     ax2.tick_params(axis='y', labelcolor=color2)
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -181,24 +197,23 @@ def calc_parameters():
         m_tot_initial = m_pay + m_struct + m_prop + m_bat + m_balloon_iteration
         m_balloon_iteration = balloon_mass_update(m_tot_initial)
         m_balloon_log.append(m_balloon_iteration)
-
     m_b_final = m_balloon_iteration
     m_tot = m_pay + m_prop + m_struct + m_bat + m_b_final
     m_module = m_pay + m_prop + m_bat + m_struct
+
+    #climb and descent rate
+    max_volume = calculate_required_size(m_tot, max_alt, M['H2'])
+    gas_density_at_altitude = gas_density(M['H2'], max_alt)
+    gas_mass = max_volume * gas_density_at_altitude
+    alt_climb_dat, vel_climb_dat, climb_time = climb_rate(m_gas_extra, gas_mass, M['H2'])
+
 
     descent_rate = max_alt/(descent_time*60*60)
     R, V_log, alt = calc_range(descent_rate, m_tot)
 
     alt_list = alt.tolist()
 
-    #emmisions:
-    max_volume = calculate_required_size(m_tot, max_alt, M['H2'])
-    gas_density_at_altitude = gas_density(M['H2'], max_alt)
-    gas_mass_max = max_volume*gas_density_at_altitude
-    min_volume = calculate_required_size(m_tot, 0, M['H2'])
-    gas_density_at_sea = gas_density(M['H2'], 0)
-    gas_mass_min = min_volume * gas_density_at_sea
-    gas_emitted = gas_mass_max - gas_mass_min
+
 
 
     plt.plot(alt_list, V_log, label='Velocity')
@@ -220,6 +235,9 @@ def calc_parameters():
     print("V_avg: ", V_avg)
     print("V_max: ", V_max)
     print("V_min: ", V_min)
-    print("gas emitted: ", gas_mass_min)
+    print("gas mass: ", gas_mass)
+    print("climb time", climb_time/3600)
+    print("Average climb rate", max_alt/climb_time)
 
-plottingdescenttime()
+calc_parameters()
+#plottingdescenttime()
