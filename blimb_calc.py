@@ -1,4 +1,5 @@
 from ambiance import Atmosphere
+import isacalc
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -17,7 +18,7 @@ def calculate_required_volume(total_mass, altitude, molar_mass):
     """
     atmos = Atmosphere(altitude)
     delta_rho = atmos.density - gas_density(molar_mass, altitude)
-    volume = total_mass / delta_rho
+    volume = total_mass / delta_rho[0]
     return volume
 
 def area_of_sphere(volume):
@@ -64,21 +65,22 @@ def traditional_balloon_weight(volume):
     weight = (4.25*volume + 340) * 0.001
     return weight
 
-max_weight = 11
-payload = 2
-alt = np.arange(0, 33000, 100)
-M = {'H2':2.015894, 'He':4.0026022}
-mass = np.zeros(np.size(alt))#mylar_weight(max_weight, alt, M['H2'], 2)
+if __name__ == '__main__':
+    max_weight = 11
+    payload = 2
+    alt = np.arange(0, 33000, 100)
+    M = {'H2':2.015894, 'He':4.0026022}
+    mass = np.zeros(np.size(alt))#mylar_weight(max_weight, alt, M['H2'], 2)
 
 
-alt = 33000
-vol = np.arange(10, 3000, 10)
-pl = np.zeros(np.shape(vol))
+    alt = 33000
+    vol = np.arange(10, 3000, 10)
+    pl = np.zeros(np.shape(vol))
 
-for i in range(np.size(vol)):
-    pl[i] = availible_payload(vol[i], alt, M['H2'], use_mylar=False)
+    for i in range(np.size(vol)):
+        pl[i] = availible_payload(vol[i], alt, M['H2'], use_mylar=False)
 
-plt.plot(vol, 9.65*np.ones(np.size(vol)))
-plt.plot(vol, pl)
-plt.show()
+    plt.plot(vol, 9.65*np.ones(np.size(vol)))
+    plt.plot(vol, pl)
+    plt.show()
 
