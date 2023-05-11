@@ -59,7 +59,7 @@ def calc_range(descent_rate, m):
         V = (Power_eff/(0.5*CD*rho*A_front))**(1/3)
         range = range + V*timestep
         V_log.append(V)
-    return range, V_log
+    return range, V_log, alt
 def balloon_mass_update(m_tot):
     volume = calculate_required_size(m_tot, max_alt, M['H2'])
     mass = (4.25*volume + 340) * 0.001
@@ -67,7 +67,7 @@ def balloon_mass_update(m_tot):
 
 
 
-def plotting():
+def plottingpower():
     power = np.arange(100, 1100, 100)
     range_data = np.zeros(np.shape(power))
     V_avg_data = np.zeros(np.shape(power))
@@ -103,15 +103,15 @@ def plotting():
     fig, ax1 = plt.subplots()
 
     color1 = 'tab:red'
-    ax1.set_xlabel('power')
-    ax1.set_ylabel('range', color=color1)
+    ax1.set_xlabel('Propulsion power used [W]')
+    ax1.set_ylabel('Range [m]', color=color1)
     ax1.plot(power, range_data, color=color1)
     ax1.tick_params(axis='y', labelcolor=color1)
 
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
     color2 = 'tab:blue'
-    ax2.set_ylabel('Total mass', color=color2)  # we already handled the x-label with ax1
+    ax2.set_ylabel('Total mass [kg]', color=color2)  # we already handled the x-label with ax1
     ax2.plot(power, m_tot_data, color=color2)
     ax2.tick_params(axis='y', labelcolor=color2)
 
@@ -137,7 +137,9 @@ def calc_parameters():
     m_module = m_pay + m_prop + m_bat + m_struct
 
     descent_rate = max_alt/(descent_time*60*60)
-    R, V_log = calc_range(descent_rate, m_tot)
+    R, V_log, alt = calc_range(descent_rate, m_tot)
+
+    alt_list = alt.tolist()
     V_avg = sum(V_log)/len(V_log)
     V_max = max(V_log)
     V_min = min(V_log)
@@ -151,4 +153,4 @@ def calc_parameters():
     print("V_max: ", V_max)
     print("V_min: ", V_min)
 
-plotting()
+calc_parameters()
