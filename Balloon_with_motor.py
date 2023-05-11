@@ -13,7 +13,8 @@ max_alt = 33000 #target altitude
 m_pay = 2 #kg
 
 #input
-descent_time = 3 #hours
+ascent_time = 1.6 #hours
+descent_time = 6 #hours
 Prop_power = 250 #W
 m_prop = 0.5
 m_balloon_assumed = 5 #varies with weight, will go out of hand
@@ -118,6 +119,55 @@ def plottingpower():
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.show()
 
+def plottingdescenttime():
+    descent_time_data = np.arange(0.5, 12, 0.5)
+    range_data = np.zeros(np.shape(descent_time_data))
+    V_avg_data = np.zeros(np.shape(descent_time_data))
+    m_tot_data = np.zeros(np.shape(descent_time_data))
+    for i in range(np.size(descent_time_data)):
+        descent_time = descent_time_data[i]
+        E_req = Prop_power * descent_time
+        wh_kg = 210
+
+        m_bat = E_req / wh_kg
+
+        # balloon mass iteration
+        m_balloon_log = []
+        m_balloon_iteration = m_balloon_assumed
+        for j in range(10):
+            m_tot_initial = m_pay + m_struct + m_prop + m_bat + m_balloon_iteration
+            m_balloon_iteration = balloon_mass_update(m_tot_initial)
+            m_balloon_log.append(m_balloon_iteration)
+
+        m_b_final = m_balloon_iteration
+        m_tot = m_pay + m_prop + m_struct + m_bat + m_b_final
+
+        descent_rate = max_alt / (descent_time * 60 * 60)
+        R, V_log, alt = calc_range(descent_rate, m_tot)
+
+        V_avg = sum(V_log)/len(V_log)
+        range_data[i] = R
+        V_avg_data[i] = V_avg
+        m_tot_data[i] = m_tot
+    #plot 2 in one
+    fig, ax1 = plt.subplots()
+
+    color1 = 'tab:red'
+    ax1.set_xlabel('Descent time [hrs]')
+    ax1.set_ylabel('Range [m]', color=color1)
+    ax1.plot(descent_time_data, range_data, color=color1)
+    ax1.tick_params(axis='y', labelcolor=color1)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color2 = 'tab:blue'
+    ax2.set_ylabel('Average velocity [m/s]', color=color2)  # we already handled the x-label with ax1
+    ax2.plot(descent_time_data, V_avg_data, color=color2)
+    ax2.tick_params(axis='y', labelcolor=color2)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.show()
+
 def calc_parameters():
     E_req = Prop_power*descent_time
     wh_kg = 210
@@ -140,6 +190,24 @@ def calc_parameters():
     R, V_log, alt = calc_range(descent_rate, m_tot)
 
     alt_list = alt.tolist()
+
+    #emmisions:
+    max_volume = calculate_required_size(m_tot, max_alt, M['H2'])
+    gas_density_at_altitude = gas_density(M['H2'], max_alt)
+    gas_mass_max = max_volume*gas_density_at_altitude
+    min_volume = calculate_required_size(m_tot, 0, M['H2'])
+    gas_density_at_sea = gas_density(M['H2'], 0)
+    gas_mass_min = min_volume * gas_density_at_sea
+    gas_emitted = gas_mass_max - gas_mass_min
+
+
+    plt.plot(alt_list, V_log, label='Velocity')
+    plt.ylabel('Velocity [m/s]')
+    plt.xlabel('Altitude [m]')
+    plt.gca().invert_xaxis()
+    #plt.legend()
+    #plt.show()
+
     V_avg = sum(V_log)/len(V_log)
     V_max = max(V_log)
     V_min = min(V_log)
@@ -152,5 +220,6 @@ def calc_parameters():
     print("V_avg: ", V_avg)
     print("V_max: ", V_max)
     print("V_min: ", V_min)
+    print("gas emitted: ", gas_mass_min)
 
-calc_parameters()
+plottingdescenttime()
