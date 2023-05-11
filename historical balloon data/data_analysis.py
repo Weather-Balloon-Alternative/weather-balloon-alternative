@@ -57,10 +57,10 @@ def analyze_stats(dat):
     data_out["burst_atlitude"] = dat[1]["alt"]
 
     data_out["burst_distance"] = geopy.distance.distance(
-        launch_position, burst_position)
+        launch_position, burst_position).km
     data_out["land_distance"] = geopy.distance.distance(
-        launch_position, land_position)
-    data_out["average_drift_velocity_ascend"] = data_out["burst_distance"].m / \
+        launch_position, land_position).km
+    data_out["average_drift_velocity_ascend"] = data_out["burst_distance"]*1000 / \
         data_out["time_to_burst"]
     data_out["bearing_burst"] = calc_bearing(launch_position, land_position)
     df = pd.DataFrame(data_out, columns=data_out.keys(), index=[0])
