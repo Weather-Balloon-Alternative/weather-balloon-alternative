@@ -45,7 +45,7 @@ def download_sonde_day(year, month, day):
     while p.poll() is None:
         sleep(1)
 
-    print("finished")
+    print(f"finished {year}/{month:02}/{day:02}")
 
 def download_sonde_month(year, month):
     cmd = f"aws s3 cp --recursive --no-sign-request s3://sondehub-history/date/{year}/{month:02}/ sondes_{year}/{month:02}/"
@@ -82,17 +82,17 @@ def download_process_month(year, month):
 # %%
 def main():
 
-    year_list = [ 2021]
+    year_list = [ 2020]
     months = range(1,13)
     days = range(1,32)
     combinations = list(itertools.product(year_list, months, days))
     print(combinations)
 
     # process_month(2022, 1)
-    with mp.Pool(5) as pool:
+    with mp.Pool(12) as pool:
         pool.starmap(download_sonde_day, combinations)
-   
-        # pool.starmap(process_month, list(itertools.product(year_list, months)))
+
+        pool.starmap(process_month, list(itertools.product(year_list, months)))
 
 if __name__ == "__main__":
     main()
