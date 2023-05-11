@@ -65,37 +65,37 @@ def balloon_mass_update(m_tot):
     mass = (4.25*volume + 340) * 0.001
     return mass
 
-
-E_req = Prop_power*descent_time
-wh_kg = 210
-
-m_bat = E_req/wh_kg
-
-#balloon mass iteration
-m_balloon_log = []
-m_balloon_iteration = m_balloon_assumed
-for i in range(10):
-    m_tot_initial = m_pay + m_struct + m_prop + m_bat + m_balloon_iteration
-    m_balloon_iteration = balloon_mass_update(m_tot_initial)
-    m_balloon_log.append(m_balloon_iteration)
-
-m_b_final = m_balloon_iteration
-m_tot = m_pay + m_prop + m_struct + m_bat + m_b_final
-m_module = m_pay + m_prop + m_bat + m_struct
-
-descent_rate = max_alt/(descent_time*60*60)
-range, V_log = calc_range(descent_rate, m_tot)
-V_avg = sum(V_log)/len(V_log)
-V_max = max(V_log)
-V_min = min(V_log)
-print("Range: ", range)
-print("mtot: ", m_tot)
-print("mbat: ", m_bat)
-print("M_balloon initial: ", m_balloon_assumed)
-print("final balloon mass: ",m_b_final)
-print("m_module: ", m_module)
-print("V_avg: ", V_avg)
-print("V_max: ", V_max)
-print("V_min: ", V_min)
+#
+# E_req = Prop_power*descent_time
+# wh_kg = 210
+#
+# m_bat = E_req/wh_kg
+#
+# #balloon mass iteration
+# m_balloon_log = []
+# m_balloon_iteration = m_balloon_assumed
+# for i in range(10):
+#     m_tot_initial = m_pay + m_struct + m_prop + m_bat + m_balloon_iteration
+#     m_balloon_iteration = balloon_mass_update(m_tot_initial)
+#     m_balloon_log.append(m_balloon_iteration)
+#
+# m_b_final = m_balloon_iteration
+# m_tot = m_pay + m_prop + m_struct + m_bat + m_b_final
+# m_module = m_pay + m_prop + m_bat + m_struct
+#
+# descent_rate = max_alt/(descent_time*60*60)
+# range, V_log = calc_range(descent_rate, m_tot)
+# V_avg = sum(V_log)/len(V_log)
+# V_max = max(V_log)
+# V_min = min(V_log)
+# print("Range: ", range)
+# print("mtot: ", m_tot)
+# print("mbat: ", m_bat)
+# print("M_balloon initial: ", m_balloon_assumed)
+# print("final balloon mass: ",m_b_final)
+# print("m_module: ", m_module)
+# print("V_avg: ", V_avg)
+# print("V_max: ", V_max)
+# print("V_min: ", V_min)
 
 
