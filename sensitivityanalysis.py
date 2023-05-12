@@ -1,6 +1,13 @@
-# Import pandas stuff here
-
 import numpy as np
+import pandas as pd
+# Import pandas stuff here
+data = pd.read_excel("data.xlsx", index_col=0)
+data = data.to_numpy()
+weights = data[:,0]
+data = data[:,1:]
+print(data)
+print(weights)
+
 
 Scores = np.nan     # Set equal to imported scores from pandas
 Weights_init = np.nan # et equal to imported weights from pandas
