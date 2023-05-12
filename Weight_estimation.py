@@ -23,7 +23,7 @@ def weight_estimate(m_sfdry,m_pay,m_parachute):
     m_lifted = m_sfdry + m_pay + m_parachute
     m_balloon = balloon_mass_update(m_lifted)
     m_tot = m_lifted + m_balloon
-    return m_tot
+    return m_tot,m_lifted,m_balloon
 
 # Range estimation
 def range_and_endurance_estimation(alt_open,glide_ratio, V_y, V_x):
@@ -37,13 +37,13 @@ def range_and_endurance_estimation(alt_open,glide_ratio, V_y, V_x):
 
 
 # Operational emissions
-def operational_emisions(m_lifted, altitude, molar_mass):
-    H2_emisions = calculate_required_size(m_lifted,altitude,molar_mass)
+def operational_emisions(m_lifted, molar_mass):
+    H2_emisions = calculate_required_size(m_lifted,0,molar_mass)
     CO2_equivalent = H2_GWP*H2_emisions
     return CO2_equivalent
 
 # Consumable cost
-def Consumable_cost(m_lifted, molar_mass):
+def consumable_cost(m_lifted, molar_mass):
     H2_volume = calculate_required_size(m_lifted,0,molar_mass)
     rho = gas_density(molar_mass,0)
     H2_mass = rho*H2_volume
@@ -54,5 +54,10 @@ def Consumable_cost(m_lifted, molar_mass):
 # Transportational cost?
 
 
-print('Mass = ',weight_estimate(m_sfdry, m_pay, m_parachute))
-print(range_and_endurance_estimation(alt_open,glide_ratio,V_y,V_x))
+print('Mass = ',weight_estimate(m_sfdry, m_pay, m_parachute)[0])
+print('Range = ',range_and_endurance_estimation(alt_open,glide_ratio,V_y,V_x)[0])
+print('Endurance = ',range_and_endurance_estimation(alt_open,glide_ratio,V_y,V_x)[2])
+print('Operational emissions = ',operational_emisions(weight_estimate(m_sfdry,m_pay,m_parachute)[1],M['H2']))
+print('Consumable costs = ',consumable_cost(weight_estimate(m_sfdry,m_pay,m_parachute)[1],M['H2']))
+
+print(weight_estimate(m_sfdry,m_pay,m_parachute)[2])
