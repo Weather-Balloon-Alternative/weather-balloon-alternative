@@ -41,12 +41,12 @@ if __name__ == '__main__':
 
 	CD0 = 0.02
 	e = 0.9
-	AR = 20
+	AR = 15
 
 	M = {'H2':2.015894, 'He':4.0026022} 
 	
 	print(glider_statistics(1, "OEM", "Mpl"))
-	carry_balloon = True
+	carry_balloon = False
 
 	for i in range(100):
 		#V_balloon = blimb_calc.calculate_required_volume(MTOm, h_max, M["H2"])
@@ -54,7 +54,7 @@ if __name__ == '__main__':
 		m_balloon = balloon_weight(MTOm)
 		OEM = glider_statistics(m_pl+m_balloon*carry_balloon, "OEM", "Mpl")
 		#OEM = (m_pl+m_balloon*carry_balloon) * 0.25
-		MTOm = m_pl+m_balloon*carry_balloon + OEM
+		MTOm = m_pl+m_balloon + OEM
 	
 	
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 	print("MTOM: {}, OEM: {}, balloon:{}, gas amt: {} [kg]".format(MTOm, OEM, m_balloon, m_gas))
 	print("Wing surface: {} [m2], Wing span: {} [m], speed at top altitude: {} [m/s]".format(S, b, v))
 
-	print("Glide ratio: {} [-], Range: {} [km], Flight time: {} [h]".format(glide_ratio,glide_range/100,flight_time/3600))
+	print("Glide ratio: {} [-], Range: {} [km], Flight time: {} [h]".format(glide_ratio,glide_range/1000,flight_time/3600))
 
 
 
