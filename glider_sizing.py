@@ -6,7 +6,7 @@ import scipy.stats
 import scipy.integrate
 import scipy.optimize
 import blimb_calc
-
+from ambiance import Atmosphere
 
 glider_data = np.genfromtxt('sailplane_data.csv',delimiter=',')[1:,1:].T
 def glider_statistics(val, output, inp="OEM"):
@@ -29,39 +29,108 @@ def glider_statistics(val, output, inp="OEM"):
 def balloon_weight(payload):
 	return 0.316*payload + 0.261
 
+def gas_density(molar_mass, altitude):
+    R = 8.3144598
+    atmos = Atmosphere(altitude)
+    rho = (atmos.pressure * molar_mass * 0.001) / (R * atmos.temperature)
+    return rho
 
-def third_estimation(payload):
+def calculate_required_size(m_tot, altitude, molar_mass):
+    atmos = Atmosphere(altitude)
+    delta_rho = atmos.density - gas_density(molar_mass, altitude)
+    volume = m_tot / delta_rho
+    return volume
+
+def balloon_mass_update(m_tot, h_max, molar_mass):
+    volume = calculate_required_size(m_tot, h_max, molar_mass)
+    mass = (4.25*volume + 340) * 0.001
+    return mass
+
+def climb_rate(m_gas_extra, m_gas_basic, molar_mass):
+    alt = np.arange(0, 33000, 100.)
+    vel = np.zeros_like(alt)
+    for i in range(np.size(alt)):
+        rho_air = Atmosphere(float(alt[i])).density[0]
+        vol = (m_gas_basic + m_gas_extra) / (rho_air - gas_density(molar_mass, alt[i]))
+        rad = ((3*vol)/(4*np.pi))**(1/3)
+        area = np.pi*(rad**2)
+        v = ((2*9.81*m_gas_extra)/(rho_air*0.5*area))**0.5
+        vel[i] = v
+    return alt, vel
+
+def third_estimation(m_electronic):
 	h_max = 33000 #maximum height to be reached by balloon
 	h_level_flight = 25000 #height at wich steady gliding flight begins
 	h_buffer = 500 #the glider should reach the target with this height remaining, to account for extra go around, inneficiencies etc 
 
+	required_ascent_rate = 5 #m/s
+
 	CD0 = 0.02
 	e = 0.85
-	AR = 4.5
-	S= 10
+	AR = 5 #similar to skywalker x8
+	S= 0.8
+
+	M = {'H2':2.015894, 'He':4.0026022}
+
+	#balloon mass:
+	m_glide = m_electronic/0.45 #kg
+	m_balloon_assumed = 3 #kg
+	m_balloon_iteration = m_balloon_assumed
+	m_balloon_log = []
+	for i in range(10):
+		m_tot_initial = m_glide + m_balloon_iteration
+		m_balloon_iteration = balloon_mass_update(m_tot_initial, h_max, M["H2"])
+		m_balloon_log.append(m_balloon_iteration)
+	m_balloon_final = m_balloon_iteration
+	m_launch = m_glide+m_balloon_final
+
+	W = m_glide * 9.81
+
+	#extra gas estimation:
+	m_gas = calculate_required_size(m_launch, h_max, M["H2"])*gas_density(M["H2"], h_max)
+	m_extra_gas = 0.01
+	alt, vel = climb_rate(m_extra_gas, m_gas, M['H2'])
+	v_avg = np.average(vel)
+	v_avg_log = [v_avg]
+	while v_avg <= required_ascent_rate:
+		m_extra_gas = m_extra_gas + 0.1
+		alt, vel = climb_rate(m_extra_gas, m_gas, M['H2'])
+		v_avg = np.average(vel)
+		v_avg_log.append(v_avg)
 
 
+	#lift over drag
+	CL = (np.pi * e * AR * CD0) ** 0.5
+	CD = CD0 + (CL ** 2) / (np.pi * AR * e)
+	glide_ratio = CL / CD
 
-	M = {'H2':2.015894, 'He':4.0026022} 
-	MTOm = 10 #kg
+	#velocity calculation
+	v_from_S = lambda S, rho: np.sqrt((W / S) * (2 / rho) * (1 / CL))
+	alt = np.arange(0, 33000, 100.)
+	v = np.zeros_like(alt)
+	M = np.zeros_like(alt)
+	for i in range(np.size(alt)):
+		rho_air = Atmosphere(float(alt[i])).density[0]
+		a = Atmosphere(float(alt[i])).speed_of_sound[0]
+		v[i] = v_from_S(S,rho_air)
+		M[i] = v_from_S(S,rho_air)/a
 
+	M_max = np.max(M)
+	v_max = np.max(v)
+	v_min = np.min(v)
 
-	for i in range(100):
-		m_balloon = balloon_weight(MTOm)
-
-	
-
-	W = MTOm*9.81
-
-	v_from_S = lambda S, rho: np.sqrt((W/S)*(2/rho)*(1/CL))
-
-	CL = (np.pi*e*AR*CD0)**0.5
-	CD = CD0 + (CL**2)/(np.pi*AR*e)
-	glide_ratio = CL/CD
 	glide_range = (h_level_flight - h_buffer)*glide_ratio
 	flight_time = scipy.integrate.quad(lambda h: glide_ratio/(v_from_S(S, isacalc.isa(h)['dens'])), h_buffer, h_level_flight)[0]
 
-
+	print("m_balloon: ", m_balloon_final)
+	print("m_glider: ", m_glide)
+	print("m_launch: ", m_launch)
+	print("m_extra_gas", m_extra_gas)
+	print("m_gas normal", m_gas)
+	print("ascent rate", v_avg)
+	print("Max mach number", M_max)
+	print("Max velocity", v_max)
+	print("Min velocity", v_min)
 	#print("MTOM: {}, OEM: {}, balloon:{}, gas amt: {} [kg]".format(MTOm, OEM, m_balloon, 1))
 	print("C_L: {} [-], Glide ratio: {} [-], Range: {} [km], Flight time: {} [h]".format(CL, glide_ratio,glide_range/1000,flight_time/3600))
 
@@ -168,11 +237,11 @@ def first_estimation(payload):
 print(glider_statistics(2, "OEM", "Mpl"))
 
 if __name__ == '__main__':
-	m_pl = 2
+	m_electronic = 1.119
 	#first_estimation(m_pl)
 	#CD0AR_plot(300, 25, 0.5)
 	#second_estimation(m_pl)
-	third_estimation(m_pl)
+	third_estimation(m_electronic)
 	
 
 
