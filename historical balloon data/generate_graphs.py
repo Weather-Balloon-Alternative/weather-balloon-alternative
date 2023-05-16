@@ -12,6 +12,7 @@ from scipy.spatial import ConvexHull
 #%%
 
 def distance_histogram(df):
+    
     # Generate some random data
     data1 = df["burst_distance"]
     data2 = df["land_distance"]
@@ -41,6 +42,7 @@ def distance_histogram(df):
     fig.tight_layout()
 
     # Display the figure
+    plt.rcParams['savefig.dpi'] = 300
     plt.savefig("figs/distance_traveled.png")
 
 #%%
@@ -62,16 +64,18 @@ def direction_polar_plot(df):
     ax.set_title('Polar Histogram of Drift Directions')
 
     # Display the plot
+    plt.rcParams['savefig.dpi'] = 300
     plt.savefig("figs/polar_drift_direction.png")
 
 #%%
 
 def plot_locations_map(df):
+
     # Set the projection of the map
     projection = ccrs.PlateCarree()
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -88,11 +92,49 @@ def plot_locations_map(df):
     lats = df["burst_position_lat"]
     ax.scatter(lons, lats, color='red', transform=projection, alpha=0.5, s=7)
 
+    d = df.iloc[0]
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+
     # Add a title to the map
     ax.set_title('plotted Burst locations from balloons from the bilt')
 
+    plt.tight_layout()
+
     # Display the map
+    plt.rcParams['savefig.dpi'] = 300
     plt.savefig("figs/burst_locations.png")
+
+    # Create a figure and axes for the map
+    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
+
+    # Set the extent of the map to the Netherlands
+    extent = [3.2, 9.6, 50.4, 53.7]
+    ax.set_extent(extent, crs=projection)
+
+    # Add map features
+    ax.add_feature(cfeature.LAND, facecolor='white')
+    ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
+    ax.add_feature(cfeature.BORDERS, linestyle=':', edgecolor='gray')
+    ax.add_feature(cfeature.COASTLINE)
+
+    # Plot the coordinates on the map
+    lons = df["land_position_lon"]
+    lats = df["land_position_lat"]
+    ax.scatter(lons, lats, color='red', transform=projection, alpha=0.5, s=7)
+
+    d = df.iloc[0]
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+    # Add a title to the map
+    ax.set_title('plotted Burst locations from balloons from the bilt')
+
+    plt.tight_layout()
+
+    # Display the map
+    plt.rcParams['savefig.dpi'] = 300
+    plt.savefig("figs/land_locations.png")
+
+
+    
     # plt.show()
 
 #%%
@@ -135,7 +177,7 @@ def plot_average_elipse(df, n_std = 2):
     projection = ccrs.PlateCarree()
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -160,9 +202,55 @@ def plot_average_elipse(df, n_std = 2):
     ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis, angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
     ax.add_artist(ellipse)
 
-    ax.set_title(f"{n_std} std confidance elipse")
+    d = df.iloc[0]
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
 
+    ax.set_title(f"burst locations with {n_std}std confidence elipse")
+
+    plt.tight_layout()
+
+    plt.rcParams['savefig.dpi'] = 300
     plt.savefig(f"figs/{n_std}_elipse.png")
+
+    # PLOT the landing location
+    #Set the projection of the map
+    projection = ccrs.PlateCarree()
+
+    # Create a figure and axes for the map
+    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
+
+    # Set the extent of the map to the Netherlands
+    extent = [3.2, 9.6, 50.4, 53.7]
+    ax.set_extent(extent, crs=projection)
+
+    # Add map features
+    ax.add_feature(cfeature.LAND, facecolor='white')
+    ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
+    ax.add_feature(cfeature.BORDERS, linestyle=':', edgecolor='gray')
+    ax.add_feature(cfeature.COASTLINE)
+
+    # Plot the coordinates on the map
+    lons = df["land_position_lon"]
+    lats = df["land_position_lat"]
+    ax.scatter(lons, lats, color='red', transform=projection, alpha=0.2, s=5)
+
+    # actaully calculate the elipse
+
+    semi_major_axis, semi_minor_axis, angle,average_location  = calculate_elipse(lats, lons, projection, n_std = n_std)
+
+    # Draw the ellipse on the map
+    ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis, angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
+    ax.add_artist(ellipse)
+
+    d = df.iloc[0]
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+
+    ax.set_title(f"landing locations with {n_std}std confidence elipse")
+
+    plt.tight_layout()
+
+    plt.rcParams['savefig.dpi'] = 300
+    plt.savefig(f"figs/{n_std}_elipse_landing.png")
     # plt.show()
 
 #%%
@@ -171,7 +259,7 @@ def plot_elipse_reduced_drift(df, percentile= 95, n_std=2):
     projection = ccrs.PlateCarree()
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -199,8 +287,14 @@ def plot_elipse_reduced_drift(df, percentile= 95, n_std=2):
     ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis, angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
     ax.add_artist(ellipse)
 
+    d = df.iloc[0]
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+
     ax.set_title(f"{n_std} std when ommiting drift velocities above {percentile} percentile")
 
+    plt.tight_layout()
+
+    plt.rcParams['savefig.dpi'] = 300
     plt.savefig(f"figs/{n_std}_{percentile}_omitted_elipse.png")
     # plt.show()
 
@@ -217,7 +311,7 @@ def main():
     plot_average_elipse(df)
     plot_elipse_reduced_drift(df)
     
-    plt.show()
+    # plt.show()
 
 if __name__ == "__main__":
     main()
