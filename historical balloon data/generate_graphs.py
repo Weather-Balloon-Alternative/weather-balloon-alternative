@@ -1,4 +1,4 @@
-#%%
+# %%
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,10 +9,11 @@ from matplotlib.patches import Ellipse
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import ConvexHull
 
-#%%
+# %%
+
 
 def distance_histogram(df):
-    
+
     # Generate some random data
     data1 = df["burst_distance"]
     data2 = df["land_distance"]
@@ -21,8 +22,8 @@ def distance_histogram(df):
     fig, axs = plt.subplots(2, 1, sharex=True, figsize=(6, 6))
 
     # Create histograms for the first row
-    bin_edges = np.arange(0,500,25)
-    
+    bin_edges = np.arange(0, 500, 25)
+
     axs[0].hist(data1, bins=bin_edges, color='blue', alpha=0.5)
     axs[1].hist(data2, bins=bin_edges, color='red', alpha=0.5)
 
@@ -45,7 +46,9 @@ def distance_histogram(df):
     plt.rcParams['savefig.dpi'] = 300
     plt.savefig("figs/distance_traveled.png")
 
-#%%
+# %%
+
+
 def direction_polar_plot(df):
     # Convert directions from degrees to radians
     angles = np.deg2rad(df["bearing_burst"])
@@ -67,7 +70,8 @@ def direction_polar_plot(df):
     plt.rcParams['savefig.dpi'] = 300
     plt.savefig("figs/polar_drift_direction.png")
 
-#%%
+# %%
+
 
 def plot_locations_map(df):
 
@@ -75,7 +79,7 @@ def plot_locations_map(df):
     projection = ccrs.PlateCarree()
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots(subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -93,7 +97,8 @@ def plot_locations_map(df):
     ax.scatter(lons, lats, color='red', transform=projection, alpha=0.5, s=7)
 
     d = df.iloc[0]
-    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"],
+            marker='o', markersize=10, color='green', transform=projection)
 
     # Add a title to the map
     ax.set_title('plotted Burst locations from balloons from the bilt')
@@ -105,7 +110,7 @@ def plot_locations_map(df):
     plt.savefig("figs/burst_locations.png")
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots(subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -123,7 +128,8 @@ def plot_locations_map(df):
     ax.scatter(lons, lats, color='red', transform=projection, alpha=0.5, s=7)
 
     d = df.iloc[0]
-    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"],
+            marker='o', markersize=10, color='green', transform=projection)
     # Add a title to the map
     ax.set_title('plotted Burst locations from balloons from the bilt')
 
@@ -133,12 +139,12 @@ def plot_locations_map(df):
     plt.rcParams['savefig.dpi'] = 300
     plt.savefig("figs/land_locations.png")
 
-
-    
     # plt.show()
 
-#%%
-def calculate_elipse(lats, lons, proj, n_std = 1):
+# %%
+
+
+def calculate_elipse(lats, lons, proj, n_std=1):
     # Convert the coordinates to map projection coordinates
     x, y, _ = proj.transform_points(ccrs.Geodetic(), lons, lats).T
 
@@ -146,7 +152,8 @@ def calculate_elipse(lats, lons, proj, n_std = 1):
     average_location = np.mean(np.column_stack((x, y)), axis=0)
 
     # Calculate the distances between the average location and all the points
-    distances_to_average = np.sqrt(np.sum((np.column_stack((x, y)) - average_location)**2, axis=1))
+    distances_to_average = np.sqrt(
+        np.sum((np.column_stack((x, y)) - average_location)**2, axis=1))
 
     # Sort the distances in ascending order
     sorted_distances = np.sort(distances_to_average)
@@ -167,17 +174,17 @@ def calculate_elipse(lats, lons, proj, n_std = 1):
     semi_minor_axis = np.sqrt(eigenvalues[1])*n_std
 
     # Calculate the angle of rotation of the ellipse
-    angle = np.arctan2(eigenvectors[1,0], eigenvectors[0,0])
+    angle = np.arctan2(eigenvectors[1, 0], eigenvectors[0, 0])
 
     return semi_major_axis, semi_minor_axis, angle, average_location
 
 
-def plot_average_elipse(df, n_std = 2):
+def plot_average_elipse(df, n_std=2):
     # Set the projection of the map
     projection = ccrs.PlateCarree()
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots(subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -196,14 +203,17 @@ def plot_average_elipse(df, n_std = 2):
 
     # actaully calculate the elipse
 
-    semi_major_axis, semi_minor_axis, angle,average_location  = calculate_elipse(lats, lons, projection, n_std = n_std)
+    semi_major_axis, semi_minor_axis, angle, average_location = calculate_elipse(
+        lats, lons, projection, n_std=n_std)
 
     # Draw the ellipse on the map
-    ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis, angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
+    ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis,
+                      angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
     ax.add_artist(ellipse)
 
     d = df.iloc[0]
-    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"],
+            marker='o', markersize=10, color='green', transform=projection)
 
     ax.set_title(f"burst locations with {n_std}std confidence elipse")
 
@@ -213,11 +223,11 @@ def plot_average_elipse(df, n_std = 2):
     plt.savefig(f"figs/{n_std}_elipse.png")
 
     # PLOT the landing location
-    #Set the projection of the map
+    # Set the projection of the map
     projection = ccrs.PlateCarree()
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots(subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -236,14 +246,17 @@ def plot_average_elipse(df, n_std = 2):
 
     # actaully calculate the elipse
 
-    semi_major_axis, semi_minor_axis, angle,average_location  = calculate_elipse(lats, lons, projection, n_std = n_std)
+    semi_major_axis, semi_minor_axis, angle, average_location = calculate_elipse(
+        lats, lons, projection, n_std=n_std)
 
     # Draw the ellipse on the map
-    ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis, angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
+    ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis,
+                      angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
     ax.add_artist(ellipse)
 
     d = df.iloc[0]
-    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"],
+            marker='o', markersize=10, color='green', transform=projection)
 
     ax.set_title(f"landing locations with {n_std}std confidence elipse")
 
@@ -253,13 +266,15 @@ def plot_average_elipse(df, n_std = 2):
     plt.savefig(f"figs/{n_std}_elipse_landing.png")
     # plt.show()
 
-#%%
-def plot_elipse_reduced_drift(df, percentile= 95, n_std=2):
+# %%
+
+
+def plot_elipse_reduced_drift(df, percentile=95, n_std=2):
     # Set the projection of the map
     projection = ccrs.PlateCarree()
 
     # Create a figure and axes for the map
-    fig, ax = plt.subplots( subplot_kw=dict(projection=projection))
+    fig, ax = plt.subplots(subplot_kw=dict(projection=projection))
 
     # Set the extent of the map to the Netherlands
     extent = [3.2, 9.6, 50.4, 53.7]
@@ -272,8 +287,9 @@ def plot_elipse_reduced_drift(df, percentile= 95, n_std=2):
     ax.add_feature(cfeature.COASTLINE)
 
     # Plot the coordinates on the map
-    percentile_drift = np.percentile(df["average_drift_velocity_ascend"],percentile)
-    reduced_df = df[df["average_drift_velocity_ascend"]<percentile_drift]
+    percentile_drift = np.percentile(
+        df["average_drift_velocity_ascend"], percentile)
+    reduced_df = df[df["average_drift_velocity_ascend"] < percentile_drift]
     lons = reduced_df["burst_position_lon"]
     lats = reduced_df["burst_position_lat"]
 
@@ -281,16 +297,20 @@ def plot_elipse_reduced_drift(df, percentile= 95, n_std=2):
 
     # actaully calculate the elipse
 
-    semi_major_axis, semi_minor_axis, angle,average_location  = calculate_elipse(lats, lons, projection, n_std = n_std)
+    semi_major_axis, semi_minor_axis, angle, average_location = calculate_elipse(
+        lats, lons, projection, n_std=n_std)
 
     # Draw the ellipse on the map
-    ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis, angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
+    ellipse = Ellipse(xy=average_location, width=2*semi_major_axis, height=2*semi_minor_axis,
+                      angle=angle*180/np.pi, facecolor='none', edgecolor='green', transform=projection)
     ax.add_artist(ellipse)
 
     d = df.iloc[0]
-    ax.plot(d["launch_position_lon"], d["launch_position_lat"], marker='o', markersize=10, color='green', transform=projection)
+    ax.plot(d["launch_position_lon"], d["launch_position_lat"],
+            marker='o', markersize=10, color='green', transform=projection)
 
-    ax.set_title(f"{n_std} std when ommiting drift velocities above {percentile} percentile")
+    ax.set_title(
+        f"{n_std} std when ommiting drift velocities above {percentile} percentile")
 
     plt.tight_layout()
 
@@ -298,11 +318,41 @@ def plot_elipse_reduced_drift(df, percentile= 95, n_std=2):
     plt.savefig(f"figs/{n_std}_{percentile}_omitted_elipse.png")
     # plt.show()
 
-#%%
+# %%
+
+
+def plot_average_drift_velocity(df):
+    # Convert directions from degrees to radians
+    vel = df["average_drift_velocity_ascend"]
+
+    # Create a polar histogram of the directions
+    fig, ax = plt.subplots()
+    ax.hist(vel, bins="auto")
+
+    # Set the direction of the radial axis to East
+    # ax.set_theta_zero_location('N')
+
+    # Set the direction of the theta axis to clockwise
+    # ax.set_theta_direction(-1)
+    ax.set_xlabel("velocity [m/s]")
+    ax.set_ylabel("frequency")
+
+    # Set the title of the plot
+    ax.set_title('Histogram of Drift velocity on ascend')
+
+    plt.tight_layout()
+    # Display the plot
+    plt.rcParams['savefig.dpi'] = 300
+    plt.savefig("figs/hist_drift_velocity.png")
+
+
+# %%
 def load_data():
     return pd.read_excel("Bilt_balloon_data.xlsx")
 
-#%%
+# %%
+
+
 def main():
     df = load_data()
     distance_histogram(df)
@@ -310,8 +360,10 @@ def main():
     plot_locations_map(df)
     plot_average_elipse(df)
     plot_elipse_reduced_drift(df)
-    
+    plot_average_drift_velocity(df)
+
     # plt.show()
+
 
 if __name__ == "__main__":
     main()
