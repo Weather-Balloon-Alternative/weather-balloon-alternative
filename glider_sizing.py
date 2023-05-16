@@ -30,7 +30,40 @@ def balloon_weight(payload):
 	return 0.316*payload + 0.261
 
 
+def third_estimation(payload):
+	h_max = 33000 #maximum height to be reached by balloon
+	h_level_flight = 25000 #height at wich steady gliding flight begins
+	h_buffer = 500 #the glider should reach the target with this height remaining, to account for extra go around, inneficiencies etc 
 
+	CD0 = 0.02
+	e = 0.85
+	AR = 4.5
+	S= 10
+
+
+
+	M = {'H2':2.015894, 'He':4.0026022} 
+	MTOm = 10 #kg
+
+
+	for i in range(100):
+		m_balloon = balloon_weight(MTOm)
+
+	
+
+	W = MTOm*9.81
+
+	v_from_S = lambda S, rho: np.sqrt((W/S)*(2/rho)*(1/CL))
+
+	CL = (np.pi*e*AR*CD0)**0.5
+	CD = CD0 + (CL**2)/(np.pi*AR*e)
+	glide_ratio = CL/CD
+	glide_range = (h_level_flight - h_buffer)*glide_ratio
+	flight_time = scipy.integrate.quad(lambda h: glide_ratio/(v_from_S(S, isacalc.isa(h)['dens'])), h_buffer, h_level_flight)[0]
+
+
+	#print("MTOM: {}, OEM: {}, balloon:{}, gas amt: {} [kg]".format(MTOm, OEM, m_balloon, 1))
+	print("C_L: {} [-], Glide ratio: {} [-], Range: {} [km], Flight time: {} [h]".format(CL, glide_ratio,glide_range/1000,flight_time/3600))
 
 def second_estimation(payload):
 	h_max = 33000 #maximum height to be reached by balloon
@@ -47,9 +80,6 @@ def second_estimation(payload):
 
 	M = {'H2':2.015894, 'He':4.0026022} 
 	MTOm = 10 #kg
-
-
-	carry_balloon = True
 
 	for i in range(100):
 		m_balloon = balloon_weight(MTOm)
@@ -139,10 +169,10 @@ print(glider_statistics(2, "OEM", "Mpl"))
 
 if __name__ == '__main__':
 	m_pl = 2
-	first_estimation(m_pl)
-	CD0AR_plot(300, 25, 0.5)
-	second_estimation(m_pl)
-
+	#first_estimation(m_pl)
+	#CD0AR_plot(300, 25, 0.5)
+	#second_estimation(m_pl)
+	third_estimation(m_pl)
 	
 
 
