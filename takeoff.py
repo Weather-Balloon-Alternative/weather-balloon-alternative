@@ -31,4 +31,4 @@ print("rocket size required: ",max(T_array)/180,"[N]")
 # I_SP = 330
 # m_dot = T/(I_SP*9.81)
 # print("total mass for climb: ",sum(m_dot*t))
-# print("average thrust required: ", np.average(T))
+# print("average thrust required: ", np.average(T))'''
