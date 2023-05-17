@@ -47,9 +47,18 @@ def test_glide_ratio_gamma():
 	gamma_calc = glider_sizing.glide_ratio(CD0, e, AR)[0]
 	assert np.isclose(gamma_calc, gamma_req)
 
-def test_glide_flight_props_range():
+def test_glide_flight_props():
 	h_start = 1000
-	h_end = 100
+	h_end = 0
 	WoS = 100 # wing loading
 	gamma = 10
 	CL = 0.5 
+
+	props_req = (10000, 200) #range is pretty obvs, flight time  is yeah
+	props_calc = glider_sizing.glide_flight_props(h_start, h_end, WoS, gamma, CL)
+	print(props_calc[1])
+	assert np.isclose(props_calc[0], props_req[0])
+
+def test_vel_profile():
+	assert True
+
