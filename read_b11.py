@@ -49,4 +49,4 @@ def read_b11(filename, index_name = "Z"):
 
 
 
-print(read_b11("db000106.b11", None))
+print(read_b11("db000106.b11", "Z"))
