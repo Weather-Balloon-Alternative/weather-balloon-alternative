@@ -12,7 +12,7 @@ Aspectratio = 8
 Wingarea = 15 #m2
 oswaldfactor = 0.9 
 propefficiency = 0.87
-nengines = 6
+nengines = 1
 Plotfunc = True
 
 # Data from Torenbeek for 2 bladed propeller
@@ -96,9 +96,12 @@ def Propeller_sizing(m, h, ROC, V, C_d_0, AR, S, e, prop_efficiency, cp, Mmax, n
     if PLOT:
         n1 = rewritten_powereq(darray,P,rho,cp)
         n2 = rewritten_tipspeed(darray,V,speedofsound,Mmax)
-        plt.plot(darray,n1,label='power')
-        plt.plot(darray,n2,label='tipspeed')
-        plt.plot(darray,vals,label='delta')
+        plt.plot(darray,n1,label='Power eq.')
+        plt.plot(darray,n2,label='Tip speed eq.')
+        plt.plot(darray,vals,label='Δn')
+        plt.ylim((-10,200))
+        plt.xlabel('Propeller diameter [m]')
+        plt.ylabel('Rotational speed [Hz]')
         plt.legend()
         plt.tight_layout
         plt.show()
