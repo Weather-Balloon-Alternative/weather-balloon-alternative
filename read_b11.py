@@ -5,7 +5,7 @@ def read_b11(filename, index_name = "Z"):
     """
     inputs: 
             filename: str,      name of the file or path to directory
-            index_name: str,    name of the index you want to sort on, options: "P", "time", "Z","T","U","TI","PO3","dir","spd", None
+            index_name: str,    name of the index you want to sort on, options: "P", "time", "Z","T","U","TI","PO3","dir","spd"
     outputs:
             data_pandas: pandas DataFrame   dataframe with the data from the b11 file.
     """
@@ -49,4 +49,4 @@ def read_b11(filename, index_name = "Z"):
 
 
 
-print(read_b11("db000106.b11"))
+print(read_b11("db000106.b11", None))
