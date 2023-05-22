@@ -130,7 +130,7 @@ def loitering_fuel(loitering_time, loitering_altitude, C_L_loiter, S, AR, e, SAF
     return L_SAF_loit
 
 
-def descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_density, th_efficiency):
+def descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_density, th_efficiency, W, S, prop_efficiency):
     """
     Args:
             ROD: float,                 planned rate of descent
@@ -153,7 +153,11 @@ def descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_densit
 
     C_D = C_d_0 + C_L_descent**2/(np.pi*AR*e)
     P_EH = ROD*W
+    print("P_EH",P_EH)
     P = (0.5*V**3*rho_array*S*C_D-P_EH)/prop_efficiency
+    print("prop efficiency", prop_efficiency)
+    print(C_D)
+    print("P",P)
     for i in range(len(P)):
         if P[i]>2*P[0]:
             P[i] = 2*P[0]
@@ -163,6 +167,7 @@ def descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_densit
             P[i] = 0
     P = P/th_efficiency
     E = sum(P*1/(ROD))
+    print(E)
     l_SAF_descent = convert_fuel_volume(E,th_efficiency, SAF_energy_density)
     print("fuel for descent:", l_SAF_descent)
     return l_SAF_descent
@@ -236,5 +241,5 @@ l_SAF +=loitering_fuel(loitering_time,loitering_altitude,C_L_loiter,S,AR,e,SAF_e
 #descending:
 descent_time = total_flight_time-((top_altitude-startaltitude)/ROC+sum(loitering_time))
 ROD = (top_altitude-finish_altitude)/descent_time
-l_SAF+=descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_density, th_efficiency)
+l_SAF+=descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_density, th_efficiency, W, S)
 print("total kilograms of SAF required:",l_SAF)
