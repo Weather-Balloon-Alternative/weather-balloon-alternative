@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 # Import pandas stuff here
-data = pd.read_excel("data.xlsx", index_col=0).to_numpy()
+df = pd.read_excel("data2.xlsx")
+names = df.columns.to_list()[1:]
+data = df.to_numpy()
 
-def monte_carlo(n_iter, n_options, data, seed=11766343):
+def monte_carlo(n_iter, n_options, data, names, seed=11766343):
     '''
     Args:
         n_iter: int, number of runs
@@ -22,7 +24,7 @@ def monte_carlo(n_iter, n_options, data, seed=11766343):
     np.random.seed(seed=seed)
 
     Scores = data[:, 1:]  # Set equal to imported scores from pandas
-    Weights_init = data[:, 0]  # et equal to imported weights from pandas
+    Weights_init = data[:, 0]  # Set equal to imported weights from pandas
 
     weight_min = min(Weights_init)
     weight_max = max(Weights_init)
@@ -36,19 +38,19 @@ def monte_carlo(n_iter, n_options, data, seed=11766343):
         # Change weight
         Weights = Weights_init
         Weights[weightselect] = weightval
-        Weights = Weights/sum(Weights)
+        Weights = Weights#/sum(Weights)
         # Calculate results
         results[i] = np.mat(Weights) * np.mat(Scores)
         wins[np.where(results[i] == np.max(results[i]))[0][0]] += 1
     return results, wins
 
 
-def plotting(results, wins, n_iter):
-    names = np.array([f'Powered A/C\n(average: {                   np.round(np.average(results[:,0]),2)})',
-                      f'Glider & Stowed \nBalloon\n(average: {         np.round(np.average(results[:,1]),2)})',
-                      f'Controlled Deflatable \nBalloon\n(average: {    np.round(np.average(results[:,2]),2)})',
-                      f'Deflatable Balloon & \nParasail\n(average: {              np.round(np.average(results[:,3]),2)})',
-                      f'Glider & Disposable \nBalloon\n(average: {       np.round(np.average(results[:,4]),2)})'])
+def plotting(results, wins, names, n_iter):
+    if not all(isinstance(item,str) for item in names):
+        raise ValueError('Names must be of type string')
+
+    for i in range(len(names)):
+        names[i] += f'\n(average: {                   np.round(np.average(results[:,0]),2)})'
 
     plt.bar(names,wins*100/n_iter)
     plt.ylim((0,100))
@@ -58,7 +60,7 @@ def plotting(results, wins, n_iter):
     plt.show()
 
     results_dict = {}
-    for i in range(5):
+    for i in range(len(names)):
         results_dict[names[i]] = results[:,i]
 
     results_df = pd.DataFrame(results_dict)
@@ -68,11 +70,8 @@ def plotting(results, wins, n_iter):
     plt.show()
 
 if __name__ == "__main__":
-    n_iter = int(1e4)
-    results, wins = monte_carlo(n_iter, 5, data)
-    print(f'Option 1 average: {np.average(results[:, 0])} win %: {wins[0] * 100 / n_iter}')
-    print(f'Option 2 average: {np.average(results[:, 1])} win %: {wins[1] * 100 / n_iter}')
-    print(f'Option 3 average: {np.average(results[:, 2])} win %: {wins[2] * 100 / n_iter}')
-    print(f'Option 4 average: {np.average(results[:, 3])} win %: {wins[3] * 100 / n_iter}')
-    print(f'Option 5 average: {np.average(results[:, 4])} win %: {wins[4] * 100 / n_iter}')
-    plotting(results, wins, n_iter)
+    n_iter = int(1e5)
+    results, wins = monte_carlo(n_iter, len(names), data, names)
+    for i in range(len(names)):
+        print(f'{names[i]} average: {np.average(results[:, i])} win %: {wins[i] * 100 / n_iter}')
+    plotting(results, wins, names, n_iter)
