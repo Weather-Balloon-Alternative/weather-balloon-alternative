@@ -74,7 +74,7 @@ def plotting(results, wins, names, n_iter):
         results_dict[names[i]] = results[:,i]
 
     results_df = pd.DataFrame(results_dict)
-    results_df.plot(kind='box')
+    results_df.plot(kind='box',showfliers=False)
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     plt.show()
