@@ -12,7 +12,7 @@ import scipy.optimize
 from ambiance import Atmosphere
 
 
-M = {'H2':2.015894, 'He':4.0026022} 
+M = {'H2':2.015894, 'He':4.0026022}
 glider_data = np.genfromtxt('sailplane_data.csv',delimiter=',')[1:,1:].T
 
 
@@ -147,6 +147,8 @@ def third_estimation(payload, heights, aero_params, Molw_gas, S):
 	print("ascent rate: {} [m/s], Max mach: {} [-], max velocity: {} [m/s], min_velocity: {} [m/s]".format(v_avg, M_max, v_max, v_min))
 	print("C_L: {} [-], Glide ratio: {} [-], Range: {} [km], Flight time: {} [h]".format(CLopt, gamma,glide_range/1000,flight_time/3600))
 
+	return glide_range, flight_time, m_launch, m_glider, m_balloon
+
 
 def first_estimation(payload, heights, aero_params, Molw_gas, carry_balloon):
 
@@ -195,7 +197,8 @@ if __name__ == '__main__':
 
 	m_pl = 2
 	heights_1 = [33000, 25000, 500]
-	aero_params_1 = [0.02, 0.85, 15]
+	aero_params_1 = [0.02, 0.80, 15]
+	
 
 	first_estimation(m_pl, heights_1, aero_params_1, M["H2"], True)
 
@@ -205,6 +208,7 @@ if __name__ == '__main__':
 	S = 0.8
 
 	third_estimation(m_electronic, heights_1, aero_params_2, M["H2"], S)
+
 	
 
 

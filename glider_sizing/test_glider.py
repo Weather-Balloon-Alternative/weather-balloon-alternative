@@ -59,6 +59,23 @@ def test_glide_flight_props():
 	print(props_calc[1])
 	assert np.isclose(props_calc[0], props_req[0])
 
-def test_vel_profile():
-	assert True
+def test_v_S_val():
+	WoS = 20
+	rho = 1
+	CL = 0.7
+	v_req = 7.55928946 #manual calculation
+	v_calc = glider_sizing.v_from_S(WoS, rho, CL)
+	assert np.isclose(v_calc, v_req)
+	WoS *= 4 #check that the relation is indeed square root
+	v_req *= 2
+	v_calc = glider_sizing.v_from_S(WoS, rho, CL)
+	assert np.isclose(v_calc, v_req)
 
+def test_vel_profile():
+	h_start = 10000
+	WoS = 20
+	CL = 0.7
+	rho_min = 1.225
+	M_max, v_max, v_min = glider_sizing.vel_profile(h_start, WoS, CL)
+	assert v_min < v_max
+	assert np.isclose(v_min, glider_sizing.v_from_S(WoS, rho_min, CL)) #v_from_S is already verified
