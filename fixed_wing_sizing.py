@@ -4,7 +4,7 @@ import pandas
 import ambiance
 import matplotlib.pyplot as plt
 
-def climb_characteristics(weights, surface_areas, rho_array, ROC, V_0, C_d_0, AR, e, plots, SAF_energy_density, th_efficiency):
+def climb_characteristics(weights, surface_areas, rho_array, ROC, V_0, C_d_0, AR, e, plots, SAF_energy_density, th_efficiency, C_L_climb, prop_efficiency):
     '''
     args:   
             weights: list with floats,              gives all different weights for which will be analyzed
@@ -18,10 +18,12 @@ def climb_characteristics(weights, surface_areas, rho_array, ROC, V_0, C_d_0, AR
             plots: Bool,                            plotting results if required
             SAF_energy_density: float,              Energy in a liter of fuel
             th_efficiency: float between 0 and 1,   thermal efficiency
+            C_L_climb: float,                       climb lift coefficient
+            prop_efficiency: float between 0 and 1, efficiency of the propeller
     outputs:
             S_return: list of floats,               optimum surface area for the design requiring minimum energy
             l_SAF_return: list of floats,           estimate of kilograms of Sustainable Aviation Fuel (SAF) required
-            P_max_return: list of flaots,           maximum power required during ascent
+            P_max_return: list of floats,           maximum power required during ascent
             min_E_tot_loc: int,                     location of the minimum energy required in array
     '''
     #making return lists
@@ -47,7 +49,6 @@ def climb_characteristics(weights, surface_areas, rho_array, ROC, V_0, C_d_0, AR
             #calculating velocity and expected drag        
             V = np.sqrt(2*W/(rho_array*S*C_L))
             C_D = C_d_0 + C_L**2/(np.pi*AR*e)
-
             #Power consumption calculations
             P_equilibrium=0.5*rho_array*S*V**3*C_D/prop_efficiency
             P_climb = np.ones(len(C_L))*ROC*W/prop_efficiency
@@ -93,9 +94,9 @@ def climb_characteristics(weights, surface_areas, rho_array, ROC, V_0, C_d_0, AR
         plt.xlabel("S[m^2]")
         plt.ylabel("Energy[J]")
         plt.show()
-    return S_return, l_saf_return, P_max_return, min_E_tot_loc
+    return S_return, l_saf_return, P_max_return, [min_E_tot_loc]
 
-def loitering_fuel(loitering_time, loitering_altitude, C_L_loiter, S, AR, e, SAF_energy_density, th_efficiency):
+def loitering_fuel(loitering_time, loitering_altitude, C_L_loiter, S, AR, e, SAF_energy_density, th_efficiency, W, prop_efficiency, C_d_0):
     """
     Args:
             loitering_time: array of length n with floats,      gives the loitering times required at each altitude.
@@ -106,6 +107,9 @@ def loitering_fuel(loitering_time, loitering_altitude, C_L_loiter, S, AR, e, SAF
             e: float between 0 and 1,                           oswald efficiency factor of the aircraft
             SAF_energy_density: float,                          Energy in a liter of fuel
             th_efficiency: float between 0 and 1,               thermal efficiency
+            W: float,                                           weight of the total vehicle
+            prop_efficiency: float btwn 0 and 1,                efficiency of the propeller
+            C_d_0: float,                                       zero lift drag
     outputs:
             l_SAF_loit: float,                                  estimate of kilograms of Sustainable Aviation Fuel (SAF) required
     """
@@ -133,12 +137,17 @@ def loitering_fuel(loitering_time, loitering_altitude, C_L_loiter, S, AR, e, SAF
 def descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_density, th_efficiency, W, S, prop_efficiency):
     """
     Args:
-            ROD: float,                 planned rate of descent
-            C_L_descent: float,         planned descent lift coefficient
-            c_d_0: float,               zero lift drag
-            AR: float,                  Aspect ratio of aircraft
-            e: float between 0 and 1,   oswald efficiency factor
-            rho_array: array of size n, density at different altitudes
+            ROD: float,                         planned rate of descent
+            C_L_descent: float,                 planned descent lift coefficient
+            c_d_0: float,                       zero lift drag
+            AR: float,                          Aspect ratio of aircraft
+            e: float between 0 and 1,           oswald efficiency factor
+            rho_array: array of size n,         density at different altitudes
+            SAF_energy_density: float,          energy density of the fuel used
+            th_efficiency: float btwn 0 and 1,  thermal efficiency of burn process
+            W: float,                           weight of the total vehicle
+            S: float,                           lifting surface area of vehicle
+            prop_efficiency: float btwn 0 and 1,efficiency of the propeller
     Outputs:
             l_SAF_descent: float,       kilograms of fuel required for descent
     """
@@ -165,7 +174,6 @@ def descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_densit
             P[i] = 2*P[-1]
         if P[i]<0:
             P[i] = 0
-    P = P/th_efficiency
     E = sum(P*1/(ROD))
     print(E)
     l_SAF_descent = convert_fuel_volume(E,th_efficiency, SAF_energy_density)
@@ -188,58 +196,61 @@ def convert_fuel_volume(required_energy, thermal_efficiency = 0.35, energy_densi
 
 
 
+def main():
+    req_energy = []
 
-req_energy = []
+    #constant ROC strategy
+    ROC = 10    #[m/s]
 
-#constant ROC strategy
-ROC = 10    #[m/s]
+    #https://www.omicsonline.org/articles-images/2168-9792-5-161-g009.html
+    #2412 foil
+    cl_alpha = 0.11
+    cl_0 =0.25 
+    C_d_0 = 0.07
+    c_d_2 = 0.000675
+    W=250 #[N]
+    C_L_climb = 1.1
+    C_L_descent = 0.15
+    prop_efficiency = 0.7
+    electric_sys_eff = 0.7
+    AR= 8
+    e =0.9
+    S = None
 
-#https://www.omicsonline.org/articles-images/2168-9792-5-161-g009.html
-#2412 foil
-cl_alpha = 0.11
-cl_0 =0.25 
-C_d_0 = 0.07
-c_d_2 = 0.000675
-W=250 #[N]
-C_L_climb = 1.1
-C_L_descent = 0.15
-prop_efficiency = 0.7
-electric_sys_eff = 0.7
-AR= 8
-e =0.9
-S = None
+    #inputs
+    startaltitude = 0
+    top_altitude = 30_500
+    finish_altitude = 0
+    V_0 = 15
+    plots = False
+    SAF_energy_density = 40*10**6 #[j/kg]
+    loitering_time = [1500,750,750] #[s]
+    loitering_altitude = [30_500,10_000,5_000] #[m]
+    C_L_loiter = [1.2, 0.18, 0.12]
+    th_efficiency = 0.35
+    total_flight_time = 10_000 #[s]
 
-#inputs
-startaltitude = 0
-top_altitude = 30_500
-finish_altitude = 0
-V_0 = 15
-plots = False
-SAF_energy_density = 40*10**6 #[j/kg]
-loitering_time = [1500,750,750] #[s]
-loitering_altitude = [30_500,10_000,5_000] #[m]
-C_L_loiter = [1.2, 0.18, 0.12]
-th_efficiency = 0.35
-total_flight_time = 10_000 #[s]
+    #________________________________________________________________________________________________________________________________________________________________________________________
+    #actual model simulations
+    rho_array = ambiance.Atmosphere(np.arange(startaltitude,top_altitude)).density
+    weights = np.arange(250,450,500)
 
-#________________________________________________________________________________________________________________________________________________________________________________________
-#actual model simulations
-rho_array = ambiance.Atmosphere(np.arange(startaltitude,top_altitude)).density
-weights = np.arange(250,450,500)
+    S_return, l_saf_return, P_max_return, min_E_tot_loc = climb_characteristics(weights, np.linspace(7.3,10.0,2), rho_array, ROC, V_0, C_d_0, AR, e, plots, SAF_energy_density, th_efficiency)
 
-S_return, l_saf_return, P_max_return, min_E_tot_loc = climb_characteristics(weights, np.linspace(7.3,10.0,2), rho_array, ROC, V_0, C_d_0, AR, e, plots, SAF_energy_density, th_efficiency)
+    #taking the surface area of minimum energy, this is part of a design strategy, can be altered
+    S = S_return[min_E_tot_loc]
+    l_SAF = l_saf_return[min_E_tot_loc]
+    P_max = P_max_return[min_E_tot_loc]
 
-#taking the surface area of minimum energy, this is part of a design strategy, can be altered
-S = S_return[min_E_tot_loc]
-l_SAF = l_saf_return[min_E_tot_loc]
-P_max = P_max_return[min_E_tot_loc]
-
-#loitering
-l_SAF +=loitering_fuel(loitering_time,loitering_altitude,C_L_loiter,S,AR,e,SAF_energy_density, th_efficiency)
+    #loitering
+    l_SAF +=loitering_fuel(loitering_time,loitering_altitude,C_L_loiter,S,AR,e,SAF_energy_density, th_efficiency)
 
 
-#descending:
-descent_time = total_flight_time-((top_altitude-startaltitude)/ROC+sum(loitering_time))
-ROD = (top_altitude-finish_altitude)/descent_time
-l_SAF+=descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_density, th_efficiency, W, S)
-print("total kilograms of SAF required:",l_SAF)
+    #descending:
+    descent_time = total_flight_time-((top_altitude-startaltitude)/ROC+sum(loitering_time))
+    ROD = (top_altitude-finish_altitude)/descent_time
+    l_SAF+=descending_fuel(ROD, C_L_descent, C_d_0, AR, e, rho_array, SAF_energy_density, th_efficiency, W, S)
+    print("total kilograms of SAF required:",l_SAF)
+
+if __name__== "__main__":
+    main()
