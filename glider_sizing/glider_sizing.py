@@ -93,7 +93,7 @@ def glide_ratio(CD0, e, AR):
 
 def glide_flight_props(h_start, h_end, WoS, gamma, CL):
 	glide_range = (h_start - h_end)*gamma
-	flight_time = scipy.integrate.quad(lambda h: gamma/(v_from_S(WoS, isacalc.isa(h)['dens'], CL)), h_end, h_start)[0]
+	flight_time = scipy.integrate.quad(lambda h: gamma/(v_from_S(WoS, Atmosphere(h).density, CL)), h_end, h_start)[0]
 	return glide_range, flight_time
 
 def vel_profile(h_start, WoS, CL):
@@ -147,7 +147,7 @@ def third_estimation(payload, heights, aero_params, Molw_gas, S):
 	print("ascent rate: {} [m/s], Max mach: {} [-], max velocity: {} [m/s], min_velocity: {} [m/s]".format(v_avg, M_max, v_max, v_min))
 	print("C_L: {} [-], Glide ratio: {} [-], Range: {} [km], Flight time: {} [h]".format(CLopt, gamma,glide_range/1000,flight_time/3600))
 
-	return glide_range, flight_time, m_launch, m_glider, m_balloon
+	return glide_range, flight_time, m_launch, m_glide, m_balloon_final
 
 
 def first_estimation(payload, heights, aero_params, Molw_gas, carry_balloon):
@@ -176,9 +176,9 @@ def first_estimation(payload, heights, aero_params, Molw_gas, carry_balloon):
 	gamma, CLopt = glide_ratio(CD0, e, AR)
 	
 	
-	rho_high =  isacalc.isa(h_max)['dens']
-	rho_level_flight = isacalc.isa(h_level_flight)['dens']
-	rho_sl = isacalc.isa(0)['dens']
+	rho_high =  Atmosphere(h_max).density
+	rho_level_flight = Atmosphere(h_level_flight).density 
+	rho_sl = Atmosphere(0).density
 
 	v = v_from_S(W/S, rho_level_flight, CLopt)
 	b = np.sqrt(S*AR)
