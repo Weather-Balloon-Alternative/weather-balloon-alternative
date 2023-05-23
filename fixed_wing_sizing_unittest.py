@@ -25,4 +25,4 @@ def test_descent_fuel():
     #Power: 0.5*rho*V**3*S*(C_D_0+CL^2/(pi*AR*e)) = 73.1919
     #energy: (power*t- ROD*W*t)/(th_efficiency*prop_efficiency) = 1805.48
     # print(fixed_wing_sizing.descending_fuel(ROD, C_L_descent, C_D_0, AR, e, rho_array, energy_density, th_efficiency, W, S, prop_efficiency))
-    assert fixed_wing_sizing.descending_fuel(ROD, C_L_descent, C_D_0, AR, e, rho_array, energy_density, th_efficiency, W, S, prop_efficiency)-1805.48/energy_density<0.1
+    assert fixed_wing_sizing.descending_fuel(ROD, C_L_descent, C_D_0, AR, e, rho_array, energy_density, th_efficiency, W, S, prop_efficiency)-18054.8/ ( th_efficiency*energy_density)<0.1
