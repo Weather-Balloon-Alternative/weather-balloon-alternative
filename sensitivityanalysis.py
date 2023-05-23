@@ -1,10 +1,18 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-# Import pandas stuff here
+
+
 df = pd.read_excel("data2.xlsx")
 names = df.columns.to_list()[1:]
+# names = ['Powered A/C',
+        #  f'Glider &\nStowed Balloon',
+        #  f'Controlled &\nDeflatable\nBalloon',
+        #  f'Deflatable\nBalloon &\nParasail',
+        #  f'Glider &\nDisposable\nBalloon']
 data = df.to_numpy()
+
+
 
 def monte_carlo(n_iter, n_options, data, names, seed=11766343):
     '''
@@ -38,7 +46,7 @@ def monte_carlo(n_iter, n_options, data, names, seed=11766343):
         # Change weight
         Weights = Weights_init
         Weights[weightselect] = weightval
-        Weights = Weights#/sum(Weights)
+        Weights = Weights/sum(Weights)
         # Calculate results
         results[i] = np.mat(Weights) * np.mat(Scores)
         wins[np.where(results[i] == np.max(results[i]))[0][0]] += 1
@@ -50,7 +58,8 @@ def plotting(results, wins, names, n_iter):
         raise ValueError('Names must be of type string')
 
     for i in range(len(names)):
-        names[i] += f'\n(average: {                   np.round(np.average(results[:,0]),2)})'
+        names[i] += f'\n(average: {                   np.round(np.average(results[:,i]),2)})'
+
 
     plt.bar(names,wins*100/n_iter)
     plt.ylim((0,100))
