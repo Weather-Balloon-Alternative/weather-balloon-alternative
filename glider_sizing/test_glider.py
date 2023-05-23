@@ -7,7 +7,7 @@ import glider_sizing
 import numpy as np
 
 def test_balloon_mass():
-	assert 1 < glider_sizing.balloon_mass(1.361+1.2) < 1.3, "you dumb f*cking cretin, you absolute buffoon"
+	assert 1 < glider_sizing.balloon_mass(1.361+1.2) < 1.3
 
 def test_gas_density():
 	#test if density of air at SL is in correct range
@@ -54,7 +54,7 @@ def test_glide_flight_props():
 	gamma = 10
 	CL = 0.5 
 
-	props_req = (10000, 200) #range is pretty obvs, flight time  is yeah
+	props_req = (10000, 200) #range is pretty obvs, flight time is not tested rn
 	props_calc = glider_sizing.glide_flight_props(h_start, h_end, WoS, gamma, CL)
 	print(props_calc[1])
 	assert np.isclose(props_calc[0], props_req[0])
