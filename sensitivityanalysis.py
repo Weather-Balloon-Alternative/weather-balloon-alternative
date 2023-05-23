@@ -9,7 +9,7 @@ names = df.columns.to_list()[1:]
 #          f'Glider &\nStowed Balloon',
 #          f'Controlled &\nDeflatable\nBalloon',
 #          f'Deflatable\nBalloon &\nParasail',
-#          f'Glider &\nDisposable\nBalloon'] # Manual override for the long
+#          f'Glider &\nDisposable\nBalloon'] # Manual override for the first trade off
 data = df.to_numpy()
 
 
@@ -37,9 +37,6 @@ def monte_carlo(n_iter, n_options, data, names, nchanged, seed=11766343):
     weight_min = min(Weights_init)
     weight_max = max(Weights_init)
 
-    fluffwinpos = []
-    fluffwinval = []
-
     for i in range(n_iter):
         # Select which weight to change
         weightselect = np.array([int(np.ceil(np.random.uniform(low=-1, high=len(Weights_init)-1))) for i in range(nchanged)])
@@ -54,11 +51,6 @@ def monte_carlo(n_iter, n_options, data, names, nchanged, seed=11766343):
         results[i] = np.mat(Weights) * np.mat(Scores) / sum(Weights)
         wins[np.where(results[i] == np.max(results[i]))[0][0]] += 1
 
-        if np.where(results[i] == np.max(results[i]))[0][0] == 1:
-            fluffwinpos.append(np.array(weightselect))
-            fluffwinval.append(np.array(weightval))
-    pd.DataFrame(np.unique(fluffwinpos,axis=0)).to_csv('fluffwinpos.csv')
-    pd.DataFrame(np.unique(fluffwinval,axis=0)).to_csv('fluffwinval.csv')
     return results, wins
 
 
@@ -89,7 +81,7 @@ def plotting(results, wins, names, n_iter):
 
 if __name__ == "__main__":
     n_iter = int(1e6)
-    n_changed = 10 # Amount of weights to be changed in a single run
+    n_changed = 5 # Amount of weights to be changed in a single run
     results, wins = monte_carlo(n_iter, len(names), data, names, n_changed)
     for i in range(len(names)):
         print(f'{names[i]} average: {np.average(results[:, i])} win %: {wins[i] * 100 / n_iter}')
