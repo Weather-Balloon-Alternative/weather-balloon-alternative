@@ -52,9 +52,9 @@ def calculate_mass(volume, material_density, material_thickness):
 def balloon_mass_mylar(total_mass, altitude, molar_mass, custom_vol = 0):
     """
         Calculates the mass of the balloon using mylar. a pressure difference of 500Pa, and a safety factor of 2
-    """
-    pressure_difference = 500
-    safety_factor  = 2
+    """ 
+    pressure_difference = 150
+    safety_factor  = 0.75
     mylar_strength = 100 * (10**6)
     mylar_density = 1390
 
@@ -86,6 +86,21 @@ def traditional_balloon_mass(volume):
     mass = (4.25*volume + 340) * 0.001
     return mass
 
+def drag(v):
+    c_d = 0.5
+    rho = 1.225
+    S = 620
+    D = 0.5 * rho * (v**2) * S * c_d
+    return D
+
+def lift_at_sl(altitude, volume, molar_mass):
+    rho_gas_alt = gas_density(molar_mass, altitude)
+    rho_gas_sl = gas_density(molar_mass, 0)
+    rho_air_sl = Atmosphere(0).density
+    L = (rho_gas_alt / rho_gas_sl) * (rho_air_sl - rho_gas_sl) * 9.81 * volume
+    return L
+
+
 max_weight = 11
 payload = 2
 alt = np.arange(0, 33000, 100)
@@ -93,17 +108,59 @@ M = {'H2':2.015894, 'He':4.0026022}
 mass = np.zeros(np.size(alt))#mylar_weight(max_weight, alt, M['H2'], 2)
 
 
-alt = 33000
+
+
 vol = np.arange(10, 3000, 10)
 pl = np.zeros(np.shape(vol))
 pl2 = np.zeros(np.shape(vol))
 
-for i in range(np.size(vol)):
-    pl[i] = availible_payload(vol[i], alt, M['He'], use_mylar=False)
-    pl2[i] = availible_payload(vol[i], alt, M['H2'], use_mylar=False)
+rho_air = Atmosphere(alt).density
+rho_gas = gas_density(M['H2'], alt)
 
-#plt.plot(vol, 9.65*np.ones(np.size(vol)))
+plt.plot(rho_air, rho_gas)
+plt.show()
+drho  = rho_air - rho_gas
+plt.plot(alt, drho)
+plt.show()
+
+m_pl = 5
+m_bl = 3.825
+m_t = m_pl+m_bl
+Vbl = 820
+
+m_liftgas = 820 * gas_density(M['H2'], 33000)
+vatalt = m_liftgas / gas_density(M['H2'], alt)
+lift = drho * vatalt
+
+plt.plot(alt, lift)
+plt.show()
+
+
+alt = 33000
+# lift = lift_at_sl(alt, vol, M['H2'])
+# plt.plot(vol, lift)
+# plt.show()
+
+for i in range(np.size(vol)):
+     pl[i] = availible_payload(vol[i], alt, M['He'], use_mylar=False)
+     pl2[i] = availible_payload(vol[i], alt, M['H2'], use_mylar=False)
+
+
+# plt.plot(vol, ((lift/9.81) / pl2))
+# plt.show()
+# #plt.plot(vol, 9.65*np.ones(np.size(vol)))
 plt.plot(vol, pl, label='Helium')
 plt.plot(vol, pl2, label='Hydrogen')
+plt.plot(vol, 5*np.ones(np.size(vol)), label='4kg')
 plt.legend()
 plt.show()
+
+# vs = np.arange(0, 31, 1)
+# D = drag(vs)
+
+# plt.plot(vs, D)
+# #plt.plot(vs, np.)
+# plt.show()
+
+
+# #m_H2 = 
